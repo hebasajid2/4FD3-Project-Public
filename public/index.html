@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Nursing Assignment &amp; Routing DSS</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to main content</a>
+  <header class="top">
+    <div>
+      <h1>Smart Nursing Assignment &amp; Routing</h1>
+      <p class="sub">Decision support for charge nurses · <strong>Prototype with demo data only. Do not enter real patient information.</strong></p>
+    </div>
+    <label class="unit-pick">Unit
+      <select id="unit-select"></select>
+    </label>
+  </header>
+
+  <nav aria-label="Sections">
+    <div role="tablist" class="tabs" id="tabs">
+      <button role="tab" id="tab-assign" aria-controls="panel-assign" aria-selected="true">1 · Assignments</button>
+      <button role="tab" id="tab-dash" aria-controls="panel-dash" aria-selected="false" tabindex="-1">2 · Dashboard</button>
+      <button role="tab" id="tab-bells" aria-controls="panel-bells" aria-selected="false" tabindex="-1">3 · Call bells</button>
+      <button role="tab" id="tab-setup" aria-controls="panel-setup" aria-selected="false" tabindex="-1">4 · Setup</button>
+    </div>
+  </nav>
+
+  <p id="status" class="status" role="status" aria-live="polite"></p>
+
+  <main id="main">
+    <!-- ============================ ASSIGNMENTS ============================ -->
+    <section id="panel-assign" role="tabpanel" aria-labelledby="tab-assign">
+      <div class="toolbar">
+        <button id="btn-opt" class="primary">Generate optimized recommendation</button>
+        <button id="btn-base">Show manual baseline</button>
+        <button id="btn-saved">Load saved assignment</button>
+        <label class="inline"><input type="checkbox" id="chk-continuity" checked> Prefer continuity with saved assignment</label>
+      </div>
+      <p class="hint">The system recommends; <strong>you decide</strong>. Change any nurse below, review the warnings, then save.</p>
+
+      <div class="grid2">
+        <div>
+          <h2>Review and edit</h2>
+          <div class="scroll">
+            <table id="draft-table">
+              <caption class="sr">Draft assignment: one row per bed</caption>
+              <thead><tr><th scope="col">Room</th><th scope="col">Bed</th><th scope="col">Acuity</th><th scope="col">Nurse</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <h2>Warnings and errors</h2>
+          <ul id="violations" class="viol"></ul>
+          <div class="toolbar">
+            <label class="inline"><input type="checkbox" id="chk-override"> Charge-nurse override: save even if there are errors</label>
+            <button id="btn-save" class="primary">Save assignment</button>
+          </div>
+        </div>
+        <div>
+          <h2>Floor map</h2>
+          <div class="toolbar">
+            <label class="inline">Colour by
+              <select id="map-color"><option value="nurse">Nurse</option><option value="acuity">Acuity</option></select>
+            </label>
+            <label class="inline"><input type="checkbox" id="map-routes" checked> Show walking routes</label>
+          </div>
+          <div id="map-assign" class="map"></div>
+          <h2>Workload</h2>
+          <div id="bars-assign"></div>
+          <h2>This plan vs manual baseline</h2>
+          <div id="cmp-assign"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ DASHBOARD ============================ -->
+    <section id="panel-dash" role="tabpanel" aria-labelledby="tab-dash" hidden>
+      <div id="kpis" class="kpis"></div>
+      <div class="grid2">
+        <div>
+          <h2>Floor map (saved assignment)</h2>
+          <div id="map-dash" class="map"></div>
+        </div>
+        <div>
+          <h2>Workload vs capacity</h2>
+          <div id="bars-dash"></div>
+          <h2>Saved assignment vs manual baseline</h2>
+          <div id="cmp-dash"></div>
+        </div>
+      </div>
+      <h2>Shift staff and room assignment cards</h2>
+      <div id="cards" class="cards"></div>
+    </section>
+
+    <!-- ============================ CALL BELLS ============================ -->
+    <section id="panel-bells" role="tabpanel" aria-labelledby="tab-bells" hidden>
+      <p class="hint">INPUT → ROUTING SYSTEM → OUTPUT. Press a simulated call bell and watch where the alert goes.</p>
+      <div class="toolbar">
+        <label class="inline">Call bell <select id="bell-select"></select></label>
+        <button id="btn-press" class="primary">Press call bell</button>
+      </div>
+      <div id="bell-result" aria-live="polite"></div>
+      <div class="toolbar">
+        <label class="inline">Simulate time passing (seconds) <input type="number" id="elapsed" value="61" min="0" step="1"></label>
+        <button id="btn-escalate">Run escalation check</button>
+        <button id="btn-refresh-alerts">Refresh</button>
+      </div>
+      <div class="grid2">
+        <div><h2>Alerts</h2><div id="alerts-table"></div></div>
+        <div><h2>Nurse device inbox (simulated)</h2><div id="inbox-table"></div></div>
+      </div>
+      <h2>Notification log</h2>
+      <div id="notif-table"></div>
+    </section>
+
+    <!-- ============================ SETUP ============================ -->
+    <section id="panel-setup" role="tabpanel" aria-labelledby="tab-setup" hidden>
+      <div class="toolbar"><button id="btn-demo">Load / repair demo unit</button>
+        <span class="hint">Safe to repeat: it never resets existing patients.</span></div>
+      <div class="forms">
+        <form id="f-unit"><h2>Unit</h2>
+          <label>Name <input name="name" required></label><button>Add unit</button></form>
+        <form id="f-room"><h2>Room</h2>
+          <label>Number <input name="room_number" required></label>
+          <label>X (m) <input name="x" type="number" step="any" value="0" required></label>
+          <label>Y (m) <input name="y" type="number" step="any" value="0" required></label>
+          <button>Add room to selected unit</button></form>
+        <form id="f-bed"><h2>Bed</h2>
+          <label>Room <select name="room_id" data-fill="rooms"></select></label>
+          <label>Bed label <input name="bed_number" required placeholder="A"></label><button>Add bed</button></form>
+        <form id="f-bell"><h2>Call bell</h2>
+          <label>Bell ID <input name="bell_id" type="number" min="1" required></label>
+          <label>Bed <select name="bed_id" data-fill="beds"></select></label><button>Link call bell</button></form>
+        <form id="f-patient"><h2>Patient acuity</h2>
+          <label>Bed <select name="bed_id" data-fill="beds"></select></label>
+          <label>Acuity (1 stable – 5 critical) <input name="acuity" type="number" min="1" max="5" value="3" required></label>
+          <button>Save patient</button>
+          <button type="button" id="btn-discharge" class="secondary">Discharge bed</button></form>
+        <form id="f-nurse"><h2>Nurse</h2>
+          <label>Name <input name="name" required></label>
+          <label>Device / extension <input name="contact" placeholder="EXT-407"></label>
+          <label>Role <select name="qualification"><option>CHARGE</option><option selected>RN</option><option>RPN</option><option>STUDENT</option></select></label>
+          <label>Max shift acuity <input name="max_workload" type="number" min="1" value="12" required></label>
+          <button>Add nurse</button></form>
+        <form id="f-nurse-edit"><h2>Nurse status</h2>
+          <label>Nurse <select name="nurse_id" data-fill="nurses"></select></label>
+          <label>Device / extension (blank = no phone) <input name="contact"></label>
+          <label class="inline"><input type="checkbox" name="available"> Available this shift</label>
+          <label class="inline"><input type="checkbox" name="mobility_restricted"> Mobility restriction (nearby rooms only)</label>
+          <button>Update nurse</button></form>
+      </div>
+      <h2>Unit layout</h2><div id="layout-table"></div>
+      <h2>Nurses</h2><div id="nurse-table"></div>
+      <h2>Assignment audit trail</h2><div id="history-table"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Decision support only: charge nurses keep full authority to modify or override. Metrics are for shift balancing, not performance appraisal.</p>
+  </footer>
+  <script src="/app.js"></script>
+</body>
+</html>

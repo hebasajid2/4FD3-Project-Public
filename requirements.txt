@@ -1,0 +1,2 @@
+# The application uses only the Python standard library (sqlite3, wsgiref, unittest).
+# Nothing to install. Vercel reads this file; keeping it dependency-free keeps cold starts fast.
