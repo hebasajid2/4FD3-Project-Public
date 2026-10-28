@@ -1,8 +1,13 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index" }
+    {
+      "source": "/api/:path*",
+      "destination": "/api/index?__route=:path*"
+    }
   ],
   "functions": {
-    "api/index.py": { "includeFiles": "nursing_dss/**" }
+    "api/index.py": {
+      "includeFiles": "nursing_dss/**"
+    }
   }
 }
