@@ -1,6 +1,6 @@
 "use strict";
 /* Smart Nursing DSS front end. Talks only to /api/* (the routing system). No build step. */
-
+//test
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
